@@ -1,51 +1,56 @@
+import random
+import string
+
 from locust import HttpLocust, TaskSet, task
-import string, random
+
+
+def random_string(length=10):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(length))
+
 
 class UserBehavior(TaskSet):
 
-    def randomString(length=10):
-        letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for i in range(length))
-
     userId = None
     groupId = None
-    name = randomString()
-    password = randomString()
+    name = random_string()
+    password = random_string()
     email = name + "@gmail.com"
 
     def on_start(self):
-        self.createUser()
-        self.createGroup()
+        self.create_user()
+        self.create_group()
 
     def on_stop(self):
-        self.deleteGroup()
-        self.deleteUser()
+        self.delete_group()
+        self.delete_user()
 
-    def createUser(self):
-        response = self.client.post("/user", {"name": self.name, "email": self.email, "password": self.password, "confirmPassword": self.password})
+    def create_user(self):
+        response = self.client.post("/user", {"name": self.name, "email": self.email, "password": self.password,
+                                              "confirmPassword": self.password})
         self.userId = response.id
 
-    def createGroup(self):
+    def create_group(self):
         self.client.post("/groups", {"name": "group" + self.randomString(5), "owner": self.userId})
         self.groupId = response.id
 
-    def deleteGroup(self):
+    def delete_group(self):
         self.client.delete("/groups/" + self.groupId)
 
-    def deleteUser(self):
+    def delete_user(self):
         self.client.delete("/users/" + self.userId)
 
     @task(1)
-    def getUser(self):
+    def get_user(self):
         self.client.get("/users/" + self.userId)
 
     @task(1)
-    def getGroup(self):
+    def get_group(self):
         self.client.get("/groups/" + self.groupId)
 
     @task(1)
-    def enterGroup(self):
-        self.client.put("/groups/" + self.groupId + "/add/" + self.userId)    
+    def enter_group(self):
+        self.client.put("/groups/" + self.groupId + "/add/" + self.userId)
 
 
 class WebsiteUser(HttpLocust):
