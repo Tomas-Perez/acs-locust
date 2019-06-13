@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+
+  locust-master:
+    build:
+      context: ..
+      dockerfile: dockerfiles/master/Dockerfile
+    restart: always
+    environment:
+      - HOST=http://example.com
+    ports:
+      - 8089:8089
+    networks:
+      locust-swarm:
+        aliases:
+          - master
+
+  locust-slave:
+    build:
+      context: ..
+      dockerfile: dockerfiles/slave/Dockerfile
+    restart: always
+    environment:
+      - MASTER_HOST=locust-master
+    networks:
+      - locust-swarm
+    depends_on:
+      - locust-master
+
+networks:
+  locust-swarm:

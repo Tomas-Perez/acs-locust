@@ -1,30 +1,21 @@
-from locust import HttpLocust, TaskSet
-
-
-def login(l):
-    l.client.post("/login", {"username": "ellen_key", "password": "education"})
-
-
-def logout(l):
-    l.client.post("/logout", {"username": "ellen_key", "password": "education"})
-
-
-def index(l):
-    l.client.get("/")
-
-
-def profile(l):
-    l.client.get("/profile")
+from locust import HttpLocust, TaskSet, task
 
 
 class UserBehavior(TaskSet):
-    tasks = {index: 2, profile: 1}
+
+    @task(2)
+    def index(self):
+        self.client.get("/")
+
+    @task
+    def profile(self):
+        self.client.get("/profile")
 
     def on_start(self):
-        login(self)
+        self.client.post("/login", {"username": "ellen_key", "password": "education"})
 
     def on_stop(self):
-        logout(self)
+        self.client.post("/logout", {"username": "ellen_key", "password": "education"})
 
 
 class WebsiteUser(HttpLocust):
