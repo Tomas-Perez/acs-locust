@@ -7,8 +7,6 @@ services:
       context: ..
       dockerfile: dockerfiles/master/Dockerfile
     restart: always
-    environment:
-      - HOST=http://example.com
     ports:
       - 8089:8089
     networks:
@@ -16,7 +14,31 @@ services:
         aliases:
           - master
 
-  locust-slave:
+  locust-slave-1:
+    build:
+      context: ..
+      dockerfile: dockerfiles/slave/Dockerfile
+    restart: always
+    environment:
+      - MASTER_HOST=locust-master
+    networks:
+      - locust-swarm
+    depends_on:
+      - locust-master
+
+  locust-slave-2:
+    build:
+      context: ..
+      dockerfile: dockerfiles/slave/Dockerfile
+    restart: always
+    environment:
+      - MASTER_HOST=locust-master
+    networks:
+      - locust-swarm
+    depends_on:
+      - locust-master
+
+  locust-slave-3:
     build:
       context: ..
       dockerfile: dockerfiles/slave/Dockerfile
