@@ -6,11 +6,10 @@ from locust import HttpLocust, TaskSet, task
 
 def random_string(length=10):
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(length))
+    return ''.join(random.choice(letters) for _ in range(length))
 
 
 class UserBehavior(TaskSet):
-
     userId = None
     groupId = None
     name = random_string()
@@ -26,12 +25,12 @@ class UserBehavior(TaskSet):
         self.delete_user()
 
     def create_user(self):
-        response = self.client.post("/user", {"name": self.name, "email": self.email, "password": self.password,
-                                              "confirmPassword": self.password})
+        response = self.client.post("/users", {"name": self.name, "email": self.email, "password": self.password,
+                                               "confirmPassword": self.password})
         self.userId = response.id
 
     def create_group(self):
-        self.client.post("/groups", {"name": "group" + self.randomString(5), "owner": self.userId})
+        response = self.client.post("/groups", {"name": "group" + random_string(5), "owner": self.userId})
         self.groupId = response.id
 
     def delete_group(self):
