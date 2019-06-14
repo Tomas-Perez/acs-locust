@@ -1,20 +1,15 @@
-import random
-import string
+import uuid
 
 from locust import HttpLocust, TaskSet, task
 
 
-def random_string(length=10):
-    letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for _ in range(length))
+def random_string():
+    return str(uuid.uuid4()).replace("-", "")
 
 
 class UserBehavior(TaskSet):
     userId = None
     groupId = None
-    name = random_string()
-    password = random_string()
-    email = name + "@gmail.com"
 
     def on_start(self):
         self.create_user()
@@ -25,13 +20,24 @@ class UserBehavior(TaskSet):
         self.delete_user()
 
     def create_user(self):
-        response = self.client.post("/users", {"name": self.name, "email": self.email, "password": self.password,
-                                               "confirmPassword": self.password})
-        self.userId = response.id
+        name = random_string()
+        email = name + "@gmail.com"
+        password = random_string()
+        response = self.client.post("/users", {"name": name, "email": email, "password": password,
+                                               "confirmPassword": password})
+        if not response.ok:
+            print(str(response))
+            raise ValueError("Could not create user")
+        else:
+            self.userId = response.text
 
     def create_group(self):
-        response = self.client.post("/groups", {"name": "group" + random_string(5), "owner": self.userId})
-        self.groupId = response.id
+        response = self.client.post("/groups", {"name": "group" + random_string(), "owner": self.userId})
+        if not response.ok:
+            print(str(response))
+            raise ValueError("Could not create group")
+        else:
+            self.groupId = response.text
 
     def delete_group(self):
         self.client.delete("/groups/" + self.groupId)
@@ -46,10 +52,6 @@ class UserBehavior(TaskSet):
     @task(1)
     def get_group(self):
         self.client.get("/groups/" + self.groupId)
-
-    @task(1)
-    def enter_group(self):
-        self.client.put("/groups/" + self.groupId + "/add/" + self.userId)
 
 
 class WebsiteUser(HttpLocust):
